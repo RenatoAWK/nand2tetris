@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import sys, os, re
+from JackTokenizer import JackTokenizer
 
 FILE_REGEX = re.compile(r"""(.)+\.jack""")
 DIRECTORY_REGEX = re.compile(r"""[\w]*/*""")
@@ -11,6 +12,21 @@ def is_file(arg_content):
 
 def is_directory(arg_content):
     return bool(DIRECTORY_REGEX.match(arg_content))
+
+
+def removing_comments_and_becoming_inline(lines):
+    for key_line, line in enumerate(lines):
+        inline_position = line.find('//')
+        if inline_position >= 0:
+            lines[key_line] = line[:inline_position]
+
+    inline = ''.join(lines).replace('\n','').replace('\t','')
+    while inline.find('/*') >= 0:
+        begin = inline.find('/*')
+        end = inline.find('*/')
+        inline = f'{inline[:begin]}{inline[end+2:]}'
+
+    return inline
 
 
 def load_files(arg_content):
@@ -30,17 +46,24 @@ def load_files(arg_content):
         file = open(file_name, 'r')
         file_strings = file.readlines()
         file.close()
-        files.append(file_strings)
+        files.append(removing_comments_and_becoming_inline(file_strings))
 
     return files
 
 
+def start(arg_content):
+    files = load_files(arg_content)
+    for file in files:
+        file_token = JackTokenizer(file)
+        file_token.tokenize()
+        print(file_token.tokens)
+
+
 def debug_mode():
     """debug mode"""
-    test = ['JackAnalyzer.py', 'teste/outro-teste/']
+    test = ['JackAnalyzer.py', 'teste3.jack']
     if len(test) == 2:
-        files = load_files(test[1])
-        print(files)
+        start(test[1])
     else:
         raise Exception('Error: Missing input')
 
@@ -48,8 +71,7 @@ def debug_mode():
 if __name__ == '__main__':
     debug = True
     if len(sys.argv) == 2:
-        files = load_files(sys.argv[1])
-        print(files)
+        start(sys.argv[1])
     else:
         if debug:
             debug_mode()
