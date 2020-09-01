@@ -1,9 +1,18 @@
 #!/usr/bin/env python3
 import sys, os, re
 from JackTokenizer import JackTokenizer
+from CompilationEngine import CompilationEngine
 
 FILE_REGEX = re.compile(r"""(.)+\.jack""")
 DIRECTORY_REGEX = re.compile(r"""[\w]*/*""")
+
+class File:
+    def __init__(self, filename, content, token: JackTokenizer = None, engine: CompilationEngine = None):
+        self.filename = filename
+        self.content = content
+        self.token = token
+        self.engine = engine
+
 
 
 def is_file(arg_content):
@@ -46,7 +55,7 @@ def load_files(arg_content):
         file = open(file_name, 'r')
         file_strings = file.readlines()
         file.close()
-        files.append(removing_comments_and_becoming_inline(file_strings))
+        files.append(File(file_name, removing_comments_and_becoming_inline(file_strings)))
 
     return files
 
@@ -54,9 +63,10 @@ def load_files(arg_content):
 def start(arg_content):
     files = load_files(arg_content)
     for file in files:
-        file_token = JackTokenizer(file)
-        file_token.tokenize()
-        print(file_token.tokens)
+        file.token = JackTokenizer(file.content)
+        file.token.tokenize()
+        file.engine = CompilationEngine(file.token, file.filename)
+        file.engine.compile()
 
 
 def debug_mode():
@@ -77,4 +87,3 @@ if __name__ == '__main__':
             debug_mode()
         else:
             raise Exception('Error: Missing input')
-

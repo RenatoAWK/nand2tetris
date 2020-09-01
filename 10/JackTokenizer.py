@@ -1,3 +1,21 @@
+class Token:
+    def __init__(self, value, type):
+        self.value = value
+        self.type = type
+        self.__presentation_symbols = {'<': '&lt', '>': '&gt', '"': '&quot', '&': '&amp'}
+
+    def __repr__(self):
+        return f'Typo: {self.type} | Value: {self.get_presentation_value()}'
+
+    def get_presentation_value(self):
+        if self.value in self.__presentation_symbols:
+            return self.__presentation_symbols[self.value]
+        else:
+            return self.value
+
+    def get_xml_style(self):
+        return f'<{self.type}> {self.get_presentation_value()} </{self.type}>'
+
 class JackTokenizer:
     def __init__(self, entry):
         self.__keywords = ['class', 'constructor', 'function', 'method', 'field', 'static',
@@ -7,7 +25,7 @@ class JackTokenizer:
                           '&', '|', '<', '>', '=', '~']
         self.__file = entry
         self.tokens = []
-        self.__current_token_position = 0
+        self.current_token_position = 0
 
     def tokenize(self):
         something = ''
@@ -39,29 +57,10 @@ class JackTokenizer:
                 something = f'{something}{char}'
 
     def has_more_tokens(self):
-        return bool(self.__current_token_position+1 >= len(self.tokens))
+        return bool(self.current_token_position + 1 >= len(self.tokens))
 
     def advance(self):
-        self.__current_token_position += 1
+        self.current_token_position += 1
 
-    def get_token(self):
-        return self.tokens[self.__current_token_position]
-
-
-class Token:
-    def __init__(self, value, type):
-        self.value = value
-        self.type = type
-        self.__presentation_symbols = {'<': '&lt', '>': '&gt', '"': '&quot', '&': '&amp'}
-
-    def __repr__(self):
-        return f'Typo: {self.type} | Value: {self.get_presentation_value()}'
-
-    def get_presentation_value(self):
-        if self.value in self.__presentation_symbols:
-            return self.__presentation_symbols[self.value]
-        else:
-            return self.value
-
-    def get_xml_style(self):
-        return f'<{self.type}> {self.get_presentation_value()} </{self.type}>'
+    def get_token(self) -> Token:
+        return self.tokens[self.current_token_position]
